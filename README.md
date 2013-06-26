@@ -1,4 +1,4 @@
 SUnit
 =====
 
-unit testing framework(only for mysefl:)
+unit testing framework(only for myself:)
