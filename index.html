@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test suite</title>
+        <meta charset="utf-8">
+        <link type="text/css" rel="stylesheet" href="sunit.css">
+    </head>
+    <body>
+        <div id="sunit">
+            <div id="sunit-header">
+                <h1><a href="#">SUnit</a></h1>
+            </div>
+            <ul id="sunit-toolbar">
+                <li id="noglobals">
+                    <i></i>
+                    noglobals
+                </li>
+                <li id="notrycatch">
+                    <i></i>
+                    notrycatch
+                </li>
+                <li id="hidepass">
+                    <i></i>
+                    Hide passed tests
+                </li>
+            </ul>
+            <h2 id="sunit-useragent">
+            </h2>
+            <p id="sunit-testresult">
+                Tests completed in <span id="costtime"></span> milliseconds.<br/>
+                1 tests of 1 passed, 0 failed.
+            </p>
+            <ol id="sunit-test">
+            </ol>
+        </div>
+        <script src="sunit.js"></script>
+        <script type="text/javascript">
+            test('A test.', function() {
+                assert(true, 'First assertion completed');
+                assert(true, 'Second assertion completed');
+                assert(true, 'Third assertion completed');
+            });
+            test('Another test.', function() {
+                assert(true, 'First test completed');
+                assert(false, 'Second test completed');
+            });
+
+            /*test('Async Test #1', function() {
+                pause();
+                setTimeout(function() {
+                    assert(true, 'First test completed!');
+                    resume();
+                }, 1000);
+            });
+
+            test('Async Test #2', function() {
+                pause();
+                setTimeout(function() {
+                    assert(true, 'Second test completed!');
+                    resume();
+                }, 1000);
+            });*/
+        </script>
+    </body>
+</html>
