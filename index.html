@@ -28,7 +28,7 @@
             </h2>
             <p id="sunit-testresult">
                 Tests completed in <span id="costtime"></span> milliseconds.<br/>
-                1 tests of 1 passed, 0 failed.
+                <span class="passed"></span> assertions of <span class="total"></span> passed, <span class="failed"></span> failed.
             </p>
             <ol id="sunit-test">
             </ol>
@@ -39,11 +39,22 @@
                 assert(true, 'First assertion completed');
                 assert(true, 'Second assertion completed');
                 assert(true, 'Third assertion completed');
-            });
+            })
+
             test('Another test.', function() {
                 assert(true, 'First test completed');
                 assert(false, 'Second test completed');
-            });
+            })
+
+            test( "hello test 1", function() {
+              ok( 1 == "1", "Passed!" );
+              ok( 1 == "1", "Passed!" );
+            })
+
+            test( "hello test 2", function() {
+              ok( 1 == "2", "Passed!" );
+              ok( 1 == "2", "Passed!" );
+            })
 
             /*test('Async Test #1', function() {
                 pause();

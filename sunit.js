@@ -1,10 +1,17 @@
 (function() {
     var g = this,
-        SUnit = {},
+        w = window,
         doc = document,
+        isWindow = !!w && (w.window === w),
+        SUnit = {},
         el = {},
-        toolbar, currentItem,
+        tests = {
+            length : 0
+        },
+        guid = 0,
         costtime = 0,
+        costTime = {},
+        toolbar, currentItem,
         html = {
             'scaffold': '<div id="sunit-header">\
                             <h1><a href="#">SUnit</a></h1>\
@@ -39,6 +46,7 @@
         },
         blank = function() {};
 
+//======================= Utility =================================
     var id = function(id) {
         return doc.getElementById(id);
     };
@@ -50,6 +58,53 @@
     var log = function() {
         console.log.apply(console, arguments);
     };
+
+    var E = {
+        handlers: {},
+
+        on: function(name, handler) {
+            var handlers = this.handlers[name];
+            if(!handlers) {
+                handlers = this.handlers[name] = [];
+            }
+            handlers.push(handler);
+            return this;
+        },
+
+        off: function(name, handler) {
+            var handlers = this.handlers[name],
+                len;
+            if(handlers) {
+                if(handler) {
+                    len = handlers.length;
+                    while(len--) {
+                        if(handlers[len] === handler) {
+                            handlers.splice(1, len);
+                        }
+                    }
+                } else {
+                    this.handlers[name] = [];
+                }
+            }
+            return this;
+        },
+
+        fire: function(name) {
+            var args = Array.prototype.slice.call(arguments, 1),
+                i,
+                len,
+                handlers = this.handlers[name];
+            if(handlers) {
+                len = handlers.length;
+                for(i = 0; i < len; i++) {
+                    handlers[i].apply(null, args);
+                }
+            }
+            return this;
+        }
+    };
+
+//======================= Utility End =================================
 
     SUnit.init = function() {
         var useragent = id('sunit-useragent');
@@ -65,10 +120,53 @@
             'hidepass': function(flag) {
                 el.area.className = flag ? 'hidepass' : '';
             }
-        }
+        };
 
         initToolbar();
+        E.on('pass', pass).
+          on('fail', fail).
+          on('before', before).
+          on('after', after).
+          on('test.before', beforeTest).
+          on('test.after', afterTest);
     };
+
+    function pass() {
+        currentItem.className = 'pass';
+    }
+
+    function fail() {
+        currentItem.className = 'fail';
+    }
+
+    function before() {
+
+    }
+
+    function after() {
+
+    }
+
+    function beforeTest(name) {
+        if(isWindow) {
+            var li = el.li.cloneNode(false);
+            li.innerHTML = html.test.replace('$', name);
+            el.area.appendChild(li);
+            currentItem = li;
+        }
+
+        tests[tests.length++] = {
+            name : name,
+            id : guid++
+        };
+    }
+
+    function afterTest(name) {
+        if(isWindow) {
+            //tag(li, 'span')[1].innerHTML = cur + ' ms';
+            //el.costtime.innerHTML = (costtime += cur);
+        }
+    }
 
     /**
      * init toolbar
@@ -86,32 +184,36 @@
         };
     };
 
+    var core = function(fn, text) {
+        E.fire('before');
+        var flag = fn();
+        E.fire(flag ? 'pass' : 'fail', text).
+          fire('after');
+    };
+
 
     //************* API Begin ****************
     g.test = function(name, fn) {
-        var begin, end, cur;
-        var li = el.li.cloneNode(false);
-        li.innerHTML = html.test.replace('$', name);
-        el.area.appendChild(li);
-        currentItem = li;
-        begin = new Date();
+        var begin, end;
+        E.fire('test.before', name);
         fn();
-        end = new Date();
-        cur = end - begin;
-        tag(li, 'span')[1].innerHTML = cur + ' ms';
-        el.costtime.innerHTML = (costtime += cur);
+        E.fire('test.after', name);
     };
 
     g.assert = function(c, text) {
-        currentItem.className = c ? 'pass' : 'fail';
+        core(function() {
+            return !!c;
+        }, text);
     };
 
     g.deepEqual = function() {
 
     };
 
-    g.equal = function() {
-
+    g.equal = function(a, b) {
+        core(function() {
+            return a == b;
+        }, text);
     };
 
     g.notDeepEqual = function() {
@@ -119,19 +221,27 @@
     };
 
     g.notEqual = function() {
-
+        core(function() {
+            return a != b;
+        }, text);
     };
 
     g.notStrictEqual = function() {
-
+        core(function() {
+            return a !== b;
+        }, text);
     };
 
-    g.ok = function() {
-
+    g.ok = function(c, text) {
+        core(function() {
+            return !!c;
+        }, text);
     };
 
     g.strictEqual = function() {
-
+        core(function() {
+            return a === b;
+        }, text);
     };
     //************* API End ****************
 
@@ -142,13 +252,6 @@ SUnit.init();
 
 /*
  * APIs which need to be implemented:
- *     deepEqual
- *     equal
- *     notDeepEqual
- *     notEqual
- *     notStrictEqual
- *     ok
- *     strictEqual
  *     throws
  *     expect
  *     module
@@ -158,4 +261,5 @@ SUnit.init();
  *     start
  *     stop
  *
+ *  Seperate the UI and the logic.
  */
