@@ -11,7 +11,9 @@
         guid = 0,
         costtime = 0,
         costTime = {},
+        lineFeed = String.fromCharCode(10),
         toolbar, currentItem,
+        userAgent = { chrome : 3, firefox : 4 },
         html = {
             'scaffold': '<div id="sunit-header">\
                             <h1><a href="#">SUnit</a></h1>\
@@ -42,7 +44,18 @@
                     <a href="#">Rerun</a>\
                     <span class="runtime"></span>\
                     <ol></ol>',
-            'item': '<li></li>'
+
+            'stack': '<table>\
+                        <tbody>\
+                            <tr class="test-source">\
+                                <th>Source:\
+                                </th>\
+                                <td>\
+                                    <pre>$</pre>\
+                                </td>\
+                            </tr>\
+                        </tbody>\
+                    </table>'
         },
         blank = function() {};
 
@@ -57,6 +70,10 @@
 
     var log = function() {
         console.log.apply(console, arguments);
+    };
+
+    var dir = function() {
+        console.dir.apply(console, arguments);
     };
 
     var E = {
@@ -79,7 +96,7 @@
                     len = handlers.length;
                     while(len--) {
                         if(handlers[len] === handler) {
-                            handlers.splice(1, len);
+                            handlers.splice(len, 1);
                         }
                     }
                 } else {
@@ -104,11 +121,33 @@
         }
     };
 
+    var position = function() {
+        if(!userAgent) return '';
+
+        var err = (function () {
+            try { throw Error(); } catch(err) { return  err; };
+        }());
+        var stack = err.stack;
+        if(stack) {
+            stack = stack.split(lineFeed);
+        }
+        return stack && stack[stack.length - userAgent];
+    };
+
 //======================= Utility End =================================
 
     SUnit.init = function() {
-        var useragent = id('sunit-useragent');
-        useragent.innerHTML = navigator.userAgent;
+        var useragentEl = id('sunit-useragent'),
+            agentStr = navigator.userAgent;
+        useragentEl.innerHTML = agentStr;
+        if(agentStr.indexOf('Chrome') > -1) {
+            userAgent = userAgent.chrome;
+        } else if(agentStr.indexOf('Firefox') > -1) {
+            userAgent = userAgent.firefox;
+        } else {
+            userAgent = null;
+        }
+
 
         el.result = id('sunit-testresult');
         el.area = id('sunit-test');
@@ -123,28 +162,35 @@
         };
 
         initToolbar();
-        E.on('pass', pass).
-          on('fail', fail).
-          on('before', before).
+        initTestArea();
+        E.on('before', before).
           on('after', after).
           on('test.before', beforeTest).
           on('test.after', afterTest);
     };
 
-    function pass() {
-        currentItem.className = 'pass';
-    }
-
-    function fail() {
-        currentItem.className = 'fail';
-    }
 
     function before() {
 
     }
 
-    function after() {
+    function after(flag, text, pos) {
+        var ol = tag(currentItem, 'ol')[0],
+            li = el.li.cloneNode(false),
+            stack,
+            className = currentItem.className;
 
+        if(flag) {
+            currentItem.className = className ? className : 'pass';
+            li.className = 'pass';
+            li.innerHTML = '<span class="test-message">Passed!</span>';
+        } else {
+            currentItem.className = 'fail';
+            stack = html.stack.replace('$', pos);
+            li.className = 'fail';
+            li.innerHTML = '<span class="test-message">' + text + '</span>' + stack;
+        }
+        ol.appendChild(li);
     }
 
     function beforeTest(name) {
@@ -173,6 +219,7 @@
      * @return {[type]} [description]
      */
     var initToolbar = function() {
+        if (!isWindow) return;
         var lis = id('sunit-toolbar').getElementsByTagName('li'),
             len = lis.length;
         while(len--) {
@@ -181,14 +228,28 @@
                 this.className = this.className ? '' : (flag = true, 'on');
                 toolbar[this.id](flag);
             };
-        };
+        }
     };
+
+    var initTestArea = function() {
+        if (!isWindow) return;
+        el.area.onclick = function(e) {
+            var el = e.target,
+                tagName = el.tagName.toLowerCase(),
+                className = el.className,
+                ol;
+            if(tagName == 'li' && 'pass fail'.indexOf(className) > -1) {
+                ol = tag(el, 'ol');
+                if(ol && ol.length > 0) {
+                    ol[0].style.display = 'block';
+                }
+            }
+        };
+    }
 
     var core = function(fn, text) {
         E.fire('before');
-        var flag = fn();
-        E.fire(flag ? 'pass' : 'fail', text).
-          fire('after');
+        E.fire('after', fn(), text, position());
     };
 
 

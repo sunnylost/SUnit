@@ -5,7 +5,7 @@ html, body {
     background-color: #2c3e50;
 }
 
-html, body, h1, h2, h3, ul, ol, li, p {
+html, body, h1, h2, h3, ul, ol, li, p, table, tbody, tr, th, td {
     margin: 0;
     padding: 0;
 }
@@ -119,13 +119,33 @@ li:hover, a:hover {
     border-bottom-left-radius: 5px;
 }
 
+#sunit-test table {
+    border-collapse: collapse;
+}
+
+#sunit-test th {
+    text-align: right;
+    vertical-align: top;
+    padding-right: 1em;
+}
+
+#sunit-test td {
+    vertical-align: top;
+}
+
+#sunit-test pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
 #sunit-test li {
     border-bottom: 2px solid #2C3E50;
     padding: 0.5em 1em;
     list-style-position: inside;
 }
 
-#sunit-test li:last-child {
+#sunit-test > li:last-child {
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
 }
@@ -136,6 +156,31 @@ li:hover, a:hover {
 
 #sunit-test li > a {
     color: #ccc;
+}
+
+#sunit-test li ol {
+    background-color: #fff;
+    padding: 0.5em;
+    border-radius: 5px;
+    margin-top: 0.5em;
+}
+
+#sunit-test li li {
+    background-color: #fff;
+    color: #710909;
+    border-bottom: none;
+}
+
+#sunit-test li .pass  {
+    border-left: 10px solid #C6E746;
+}
+
+#sunit-test li .fail {
+    border-left: 10px solid #ee5757;
+}
+
+.pass {
+    color: #366097;
 }
 
 .pass ol {
