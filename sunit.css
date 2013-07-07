@@ -179,6 +179,18 @@ li:hover, a:hover {
     border-left: 10px solid #ee5757;
 }
 
+.counts {
+    color: #000;
+}
+
+.counts .passed {
+    color: #5E740B;
+}
+
+.counts .failed {
+    color: #710909;
+}
+
 .pass {
     color: #366097;
 }

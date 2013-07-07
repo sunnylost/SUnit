@@ -37,13 +37,14 @@
 
             'test': '<strong>\
                         <span class="test-name">$</span>\
-                        <b class="counts">(\
-                        <b class="failed">0</b>,\
-                        <b class="passed">0</b>, 0)</b>\
                     </strong>\
                     <a href="#">Rerun</a>\
                     <span class="runtime"></span>\
                     <ol></ol>',
+
+            'testResult' : '<b class="counts">(\
+                        <b class="failed">$2</b>,\
+                        <b class="passed">$1</b>, $0)</b>',
 
             'stack': '<table>\
                         <tbody>\
@@ -184,11 +185,13 @@
             currentItem.className = className ? className : 'pass';
             li.className = 'pass';
             li.innerHTML = '<span class="test-message">Passed!</span>';
+            tests[tests.length - 1].result[1] += 1;
         } else {
             currentItem.className = 'fail';
             stack = html.stack.replace('$', pos);
             li.className = 'fail';
             li.innerHTML = '<span class="test-message">' + text + '</span>' + stack;
+            tests[tests.length - 1].result[2] += 1;
         }
         ol.appendChild(li);
     }
@@ -203,12 +206,17 @@
 
         tests[tests.length++] = {
             name : name,
-            id : guid++
+            id : guid++,
+            result : [ 0, 0, 0 ] //count, passed, failed
         };
     }
 
     function afterTest(name) {
         if(isWindow) {
+            var st = tag(currentItem, 'strong')[0];
+            st.innerHTML += html.testResult.replace(/\$(\d)/g, function(a, b) {
+                return tests[tests.length - 1].result[b];
+            });
             //tag(li, 'span')[1].innerHTML = cur + ' ms';
             //el.costtime.innerHTML = (costtime += cur);
         }
@@ -248,6 +256,7 @@
     }
 
     var core = function(fn, text) {
+        tests[tests.length - 1].result[0] += 1;
         E.fire('before');
         E.fire('after', fn(), text, position());
     };
