@@ -52,25 +52,18 @@
             })
 
             test( "hello test 2", function() {
-              //ok( 1 == "2", "Passed!" );
-              //ok( 1 == "2", "Passed!" );
+              ok( 1 == "2", "Passed!" );
+              ok( 1 == "2", "Passed!" );
             })
 
-            /*test('Async Test #1', function() {
-                pause();
-                setTimeout(function() {
-                    assert(true, 'First test completed!');
-                    resume();
-                }, 1000);
-            });
+            asyncTest( "asynchronous test: one second later!", function() {
+              expect( 1 );
 
-            test('Async Test #2', function() {
-                pause();
-                setTimeout(function() {
-                    assert(true, 'Second test completed!');
-                    resume();
-                }, 1000);
-            });*/
+              setTimeout(function() {
+                ok( true, "Passed and ready to resume!" );
+                start();
+              }, 1000);
+            });
         </script>
     </body>
 </html>

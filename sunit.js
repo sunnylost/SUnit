@@ -31,8 +31,10 @@
                         </ul>\
                         <h2 id="sunit-useragent"></h2>\
                         <p id="sunit-testresult">\
-                            Tests completed in <span id="costtime"></span> milliseconds.<br/>\
-                            1 tests of 1 passed, 0 failed.\
+                            Tests completed in <span id="costtime"></span> milliseconds.\
+                            <br/>\
+                            <span class="passed"></span> assertions of <span class="total"></span> passed,\
+                            <span class="failed"></span> failed.\
                         </p><ol id="sunit-test"></ol>',
 
             'test': '<strong>\
@@ -61,6 +63,10 @@
         blank = function() {};
 
 //======================= Utility =================================
+    var $ = function(selector, el) {
+        return (el || doc).querySelectorAll(selector);
+    };
+
     var id = function(id) {
         return doc.getElementById(id);
     };
@@ -151,6 +157,9 @@
 
 
         el.result = id('sunit-testresult');
+        el.total = $('.total', el.result)[0];
+        el.passed = $('.passed', el.result)[0];
+        el.failed = $('.failed', el.result)[0];
         el.area = id('sunit-test');
         el.costtime = id('costtime');
         el.li = doc.createElement('li');
@@ -166,8 +175,8 @@
         initTestArea();
         E.on('before', before).
           on('after', after).
-          on('test.before', beforeTest).
-          on('test.after', afterTest);
+          on('test.start', testStart).
+          on('test.done', testDone);
     };
 
 
@@ -196,7 +205,7 @@
         ol.appendChild(li);
     }
 
-    function beforeTest(name) {
+    function testStart(name) {
         if(isWindow) {
             var li = el.li.cloneNode(false);
             li.innerHTML = html.test.replace('$', name);
@@ -205,20 +214,25 @@
         }
 
         tests[tests.length++] = {
-            name : name,
             id : guid++,
+            name : name,
             result : [ 0, 0, 0 ] //count, passed, failed
         };
     }
 
-    function afterTest(name) {
+    function testDone(name) {
         if(isWindow) {
-            var st = tag(currentItem, 'strong')[0];
+            var st = tag(currentItem, 'strong')[0],
+                curTest = tests[tests.length - 1];
             st.innerHTML += html.testResult.replace(/\$(\d)/g, function(a, b) {
-                return tests[tests.length - 1].result[b];
+                return curTest.result[b];
             });
-            //tag(li, 'span')[1].innerHTML = cur + ' ms';
-            //el.costtime.innerHTML = (costtime += cur);
+            if(!curTest.result[2]) {
+                el.failed.innerHTML = +(el.failed.innerHTML) + 1;
+            } else {
+                el.passed.innerHTML = +(el.passed.innerHTML) + 1;
+            }
+            el.total.innerHTML = +(el.total.innerHTML) + 1;
         }
     }
 
@@ -262,12 +276,12 @@
     };
 
 
-    //************* API Begin ****************
+    //************* Assertion API Begin ****************
     g.test = function(name, fn) {
         var begin, end;
-        E.fire('test.before', name);
+        E.fire('test.start', name);
         fn();
-        E.fire('test.after', name);
+        E.fire('test.done', name);
     };
 
     g.assert = function(c, text) {
@@ -276,11 +290,11 @@
         }, text);
     };
 
-    g.deepEqual = function() {
+    g.deepEqual = function(a, b, text) {
 
     };
 
-    g.equal = function(a, b) {
+    g.equal = function(a, b, text) {
         core(function() {
             return a == b;
         }, text);
@@ -290,13 +304,13 @@
 
     };
 
-    g.notEqual = function() {
+    g.notEqual = function(a, b, text) {
         core(function() {
             return a != b;
         }, text);
     };
 
-    g.notStrictEqual = function() {
+    g.notStrictEqual = function(a, b, text) {
         core(function() {
             return a !== b;
         }, text);
@@ -308,13 +322,61 @@
         }, text);
     };
 
-    g.strictEqual = function() {
+    g.strictEqual = function(a, b, text) {
         core(function() {
             return a === b;
         }, text);
     };
-    //************* API End ****************
 
+    g.throws = function(a, text) {
+        core(function() {
+            var isThrows = false;
+            try {
+                a.call(null);
+            } catch(e) {
+                isThrows = true;
+            } finally {
+                return isThrows;
+            }
+        }, text);
+    };
+    //************* Assertion API End ****************
+
+    //************* Async API ************************
+    g.asyncTest = function() {
+
+    };
+
+    g.start = function() {
+
+    };
+
+    g.stop = function() {
+
+    };
+    //************* Async API End ********************
+
+    //************* Callback API ********************
+    SUnit.before = function(fn) {
+        E.on('before', fn);
+    };
+
+    SUnit.done = function(fn) {
+        E.on('done', fn);
+    };
+
+    SUnit.log = function(fn) {
+        E.on('log', fn);
+    };
+
+    SUnit.testStart = function(fn) {
+        E.on('test.start', fn);
+    };
+
+    SUnit.testDone = function(fn) {
+        E.on('test.done', fn);
+    };
+    //************* Callback API End ****************
     g.SUnit = SUnit;
 })();
 
@@ -322,7 +384,6 @@ SUnit.init();
 
 /*
  * APIs which need to be implemented:
- *     throws
  *     expect
  *     module
  *
